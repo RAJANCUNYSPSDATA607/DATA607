@@ -1,0 +1,61 @@
+---
+title: "DATA607_LAB_1_Rajan"
+author: "Krishna Rajan"
+date: "2/24/2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+##Read the data table from text file store in GitHub 
+
+data <- read.table("https://raw.githubusercontent.com/RAJANCUNYSPSDATA607/DATA607/master/DATA%20607%20LAB_1.txt", header=FALSE, sep="\n")
+head(data,5)
+
+## remove dashes and seperates date using "|" as demarcation to split data into indiviual columns
+
+delim <- read.delim("https://raw.githubusercontent.com/RAJANCUNYSPSDATA607/DATA607/master/DATA%20607%20LAB_1.txt", header=FALSE, sep="|", skip = 4, stringsAsFactors = FALSE)
+head(delim,5)
+
+##now time to read data into a frame by extracting information like name, state, points, rating, & average pre-rating of their ooponents
+
+chess <- data.frame(Name = delim$V2[c(TRUE, FALSE, FALSE)], State = delim$V1[c(FALSE, TRUE, FALSE)], Points = round(as.numeric(delim$V3[c(TRUE, FALSE, FALSE)]), 1), Rating = integer(64), Opponents = integer(64))
+head(chess,5)
+
+## Next get the pre rating for each player using the stringr function
+library(stringr)
+Rating <- str_extract(delim$V2[c(FALSE, TRUE, FALSE)], "R:[:blank:]+[:digit:]+")
+chess$Rating <- as.numeric(str_extract(Rating, "[:digit:]+"))
+head(chess,5)
+
+##create a rating table for each player vased on his oponents based on 7 rounds of play
+Rate <- data.frame(playnum = str_trim(delim$V1[c(TRUE, FALSE, FALSE)]), rate = chess$Rating, R1 = as.numeric(str_extract(delim$V4[c(TRUE, FALSE, FALSE)], "[:digit:]+")), R2 = as.numeric(str_extract(delim$V5[c(TRUE, FALSE, FALSE)], "[:digit:]+")), R3 = as.numeric(str_extract(delim$V6[c(TRUE, FALSE, FALSE)], "[:digit:]+")), R4 = as.numeric(str_extract(delim$V7[c(TRUE, FALSE, FALSE)], "[:digit:]+")), R5 =  as.numeric(str_extract(delim$V8[c(TRUE, FALSE, FALSE)], "[:digit:]+")), R6 =  as.numeric(str_extract(delim$V9[c(TRUE, FALSE, FALSE)], "[:digit:]+")), R7 =  as.numeric(str_extract(delim$V10[c(TRUE, FALSE, FALSE)], "[:digit:]+")), rateAvg = numeric(64))
+head(Rate,5)
+
+##Replace player number with pre ranking number in each round for all 64 players.
+for (i in 1:64) {
+        Rate$R1[i] <- Rate$rate[Rate$R1[i]]
+        Rate$R2[i] <- Rate$rate[Rate$R2[i]]
+        Rate$R3[i] <- Rate$rate[Rate$R3[i]]
+        Rate$R4[i] <- Rate$rate[Rate$R4[i]]
+        Rate$R5[i] <- Rate$rate[Rate$R5[i]]
+        Rate$R6[i] <- Rate$rate[Rate$R6[i]]
+        Rate$R7[i] <- Rate$rate[Rate$R7[i]]
+}
+head(Rate,5)
+
+## Calculate average ranking using for loop and using function "rowMeans" 
+for (i in 1:64) {
+        Rate$rateAvg[i] <- rowMeans(Rate[i, 3:9], na.rm = TRUE)
+}
+head(Rate,5)
+
+## Put the final average ranking value in a data frame
+chess$Opponents <- round(Rate$rateAvg, digits = 0)
+chess
+
+## Write the output file to .CSV
+write.csv(chess,file="/Users/rajans/Desktop/CUNY/Data Acquition & Management/DATA-607-Project-1/project1/DATA607_project1_outputRating.txt")
+```
+
