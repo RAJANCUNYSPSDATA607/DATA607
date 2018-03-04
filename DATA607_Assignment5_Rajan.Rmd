@@ -1,0 +1,54 @@
+---
+title: "DATA607 _Assignment5_Rajan"
+author: "Krishna Rajan"
+date: "3/4/2018"
+output: pdf_document
+---
+
+```{r}
+##The chart above describes arrival delays for two airlines across five destinations. Your task is to:
+##(1) Create a .CSV file (or optionally, a MySQL database!) that includes all of the information above. You’re encouraged to use a “wide” structure similar to how the information appears above, so that you can practice tidying and transformations as described below.
+##(2)Readtheinformationfromyour.CSVfileintoR,andusetidyrand dplyr asneededtotidy and transform your data.
+##(3) Perform analysis to compare the arrival delays for the two airlines.
+
+library(tidyr)
+library(dplyr)
+library(stringr)
+
+flights_data <- read.csv("/Users/rajans/Desktop/CUNY/Data Acquition & Management/Flights_assignment5.csv",header=TRUE,sep=",",na.strings = c("","NA")) 
+head(flights_data)
+##Add Column names to X & X1
+colnames(flights_data)[1] <- "Airline"
+colnames(flights_data)[2] <- "Status"
+flights_data[2, 1] <- "Alaska"
+flights_data[5, 1] <- "AM West"
+head(flights_data)
+##fib- "fill in the blanks""
+##Remove line with NA & add airline names to appropriate rows
+flights_data_fib <-na.omit(flights_data) 
+head(flights_data_fib)
+## T2C: Text to columns 
+flights_data_fibT2C <- gather(flights_data_fib, "City", "Count", 3:7)
+flights_data_fibT2C$City <- str_replace(flights_data_fibT2C$City, "[.]", " ")
+flights_data_final <- spread(flights_data_fibT2C, Status, Count)
+flights_data_final
+
+##Calculate Delaypercentages between the 2 airlines
+DelayOverall <- flights_data_final %>% 
+  group_by(Airline) %>%
+  summarise(TotalDelayed=sum(Delayed),TotalOnTime=sum(`Ontime`), PercentDelayed=round((TotalDelayed/(TotalDelayed+TotalOnTime))*100, 2))
+
+##Caluclate delay by airline & airport
+DelayOverall
+## AM West has more ontime flights 89.11% as compared to Alaska seems to have more intime flights 86.73% this is significant as AM west flies almost twice as many flights as comapred to Alaska
+
+DelayCity <- flights_data_final %>% 
+  group_by(Airline, City) %>%
+  summarise(TotalDelayed=sum(Delayed),TotalOnTime=sum(`Ontime`), PercentDelayed=round((TotalDelayed/(TotalDelayed+TotalOnTime))*100, 2))
+
+DelayCity
+## looking at the % delayed by city the data is much clear the bulk of AM West's vast improvement in ontime arrival is beacuse it flies 67%  more to Phoenix than to any other airport. this tells me that AM WEST might have Pheonix as a major hub as comapred to Alaska.
+##removing Phoenix from the mix Alaska is more efficient in arrivals as comapred to AM West.
+
+```
+
