@@ -1,0 +1,45 @@
+---
+title: "Data607_Project2_Rajan"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+require(dplyr)
+require(tidyr)
+require(magrittr)
+require(stringr)
+require(zoo)
+require(ggplot2)
+require(ggthemes)
+require(extrafont)
+
+##Fix poort formating from the file
+AeroCost = read.csv(file="AeroCost.csv",header=TRUE,sep=",",na.strings = c("","NA"))
+head(c)
+
+
+##Tidy data done with TidyR,
+AeroCost$Type=na.locf(AeroCost$Type)
+AeroCost$Type = str_trim(AeroCost$Type)
+AeroCost$Model = str_trim(AeroCost$Model)
+AeroCost$Type=as.factor(AeroCost$Type)
+AeroCost$Model= as.factor(AeroCost$Model)
+AeroCost = gather(AeroCost,Year,Cost,X1941:X1945)
+AeroCost$Model[AeroCost$Model==""] <- NA
+AeroCost$Model= as.factor(AeroCost$Model)
+AeroCost$Year=str_replace(AeroCost$Year,"X","")
+AeroCost$Year=as.factor(AeroCost$Year)
+AeroCost$Cost=str_replace(AeroCost$Cost,",","")
+AeroCost$Cost=as.numeric(AeroCost$Cost)
+AeroCost = AeroCost[complete.cases(AeroCost$Model),]
+write.csv(AeroCost,"AircraftCostData.csv", row.names=FALSE)
+head(AeroCost)
+
+
+##Plot for Tranport
+##Ran out of time
+
+```
+
