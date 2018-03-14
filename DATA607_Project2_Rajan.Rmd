@@ -15,11 +15,15 @@ require(ggplot2)
 require(ggthemes)
 require(extrafont)
 
-##Fix poort formating from the file
+```
+
+```{r}
+##Fix poor formating from the file downloaded from website"https://www.ibiblio.org/hyperwar/AAF/StatDigest/aafsd-3.html" Table 82
 AeroCost = read.csv(file="AeroCost.csv",header=TRUE,sep=",",na.strings = c("","NA"))
-head(c)
+head(AeroCost)
+```
 
-
+```{r}
 ##Tidy data done with TidyR,
 AeroCost$Type=na.locf(AeroCost$Type)
 AeroCost$Type = str_trim(AeroCost$Type)
@@ -34,12 +38,23 @@ AeroCost$Year=as.factor(AeroCost$Year)
 AeroCost$Cost=str_replace(AeroCost$Cost,",","")
 AeroCost$Cost=as.numeric(AeroCost$Cost)
 AeroCost = AeroCost[complete.cases(AeroCost$Model),]
-write.csv(AeroCost,"AircraftCostData.csv", row.names=FALSE)
+write.csv(AeroCost,"Aircraftclean.csv", row.names=FALSE)
 head(AeroCost)
-
-
-##Plot for Tranport
-##Ran out of time
-
 ```
+
+```{r graphic, message=FALSE, warning=FALSE, comment = NA, fig.cap='WW2 Fighter Cost Plot.', fig.width = 9, fig.height = 5, dpi = 144}
+##Plot to study cost of Transports.
+library(dplyr)
+library(tidyr)
+target=c("C-43","C-45","C-46","C-47","C-53","C-54","C-60","C-61","UC-64","C-69","C-74","C-78","C-82","C-87")
+Transports=filter(c,Model %in%target)   
+g=ggplot(data=Transports,aes(x=Year,y=Cost*0.001,group = Model, color = Model))
+g=g+geom_line(stat="identity",size=1.6)
+g=g+ggtitle("Cost of WW2 Transports")
+g=g+ylab("Cost ($K)")+xlab("Year")
+g=g+theme_get()
+g=g+theme(plot.title = element_text(hjust = 0.5),text=element_text(size=13, family="Times"))
+g
+```
+
 
