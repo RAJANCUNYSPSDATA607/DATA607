@@ -1,0 +1,30 @@
+<table style="width:100%">
+� <tr>
+��� <th>Title</th>
+��� <th>Authors</th> 
+��� <th>Genre</th>
+    <th>YearPublished</th>
+� </tr>
+� <tr>
+� � <td>War & Peace</td>
+��� <td>Leo Tolstoy</td> 
+��� <td>Historical Fiction</td>
+    <td>1867</td>
+� </tr>
+� <tr>
+��� <td>A Brief History Of Time</td>
+��� <td>Stephen Hawking</td> 
+��� <td>Popular Science</td>
+    <td>1988</td>
+� </tr>
+ <tr>
+��� <td>Principia Mathematica</td>
+��� <td>Bertrand Russell, Alfred North Whitehead</td> 
+��� <td>Philosophy</td>
+<td>1910</td>
+� </tr>
+ 
+</table> 
+ 
+</body>
+</html>
