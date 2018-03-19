@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fbooks>
+<book>
+<title>War And Peace</title>
+<authorname>Leo Tolstoy</authorname>
+<Genre>Historical Fiction</Genre>
+<yearpublished>1867</yearpublished>
+</book>
+<book>
+<title>A Brief History Of Time</title>
+<authorname>Stephen Hawking</authorname>
+<Genre>Popular Science</Genre>
+<yearpublished>1988</yearpublished>
+</book>
+<book>
+<title>Principia Mathamatica</title>
+<authorname>Bertrand Russell,Alfred North Whitehead</authorname>
+<Genre>Philosophy</Genre>
+<yearpublished>1910</yearpublished>
+</book>
+</fbooks> 
