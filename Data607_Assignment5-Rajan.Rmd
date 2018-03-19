@@ -1,0 +1,37 @@
+---
+title: "Data607_Assignment5_Rajan"
+author: "Krishna Rajan"
+date: "3/18/2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(RCurl)
+library(XML)
+library(jsonlite)
+library(data.table)
+
+url1="https://raw.githubusercontent.com/RAJANCUNYSPSDATA607/DATA607/master/Data607_Assignment5_Html"
+url2="https://raw.githubusercontent.com/RAJANCUNYSPSDATA607/DATA607/master/Dat607_Assign5_json"
+url3="https://raw.githubusercontent.com/RAJANCUNYSPSDATA607/DATA607/master/Data_607_Assignment5_XML"
+
+html= getURL(url1)
+xml =getURL(url3)
+json = getURL(url2)
+
+table = readHTMLTable(html, header = TRUE)
+htmlDF = data.frame(table )
+colnames( htmlDF) = c("Title","Authors","Genre","YearPublished")
+htmlDF
+
+xmlh = xmlParse(xml)
+xmlDF = xmlToDataFrame(xmlh)
+xmlDF
+
+jsonL = fromJSON(json)
+jsonL
+## from the HTML ,Json & XML files though have different formats reading them into a data frame can provide identical results.
+```
+
