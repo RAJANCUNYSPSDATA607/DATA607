@@ -1,8 +1,7 @@
 {"fbooks":[
 	{
 "title": “War & Peace”,
-"authors": [
-		“Leo Tolstoy”
+"authors":["Leo Tolstoy"
                ],
 “Genre” :”Historical Fiction”,
 "yearpublished": 1867
