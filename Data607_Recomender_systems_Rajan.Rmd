@@ -1,0 +1,24 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+##1. Perform a Scenario Design analysis as described below. Consider whether it makes sense for your selected recommender system to perform scenario design twice, once for the organization (e.g. Amazon.com) and once for the organization's customers.
+
+##a) Who are the target users? curated playlist for Spotify memebers called  Daily user mix with recommendations
+
+##b) What are the key goals? Key goals is to help spotify users identify new music based on previous listining history.
+
+##b) How Spotify helps its users?By creating an algorithm that studies what type of music they listen to frequently and then recommend similar music that they might like and want to add to their collection.
+
+##Would doing a scenario design for spotify make sense? I do believe this would make much sense as SPotify is specifically targeting customers who are music lovers.
+
+##Reverse EngineerInformation retrieval algorithms - Using term frequency-inverse document frequency (tf-idf) to identify how often a song is played in a local library of a genius user in comparision to the apple database of all genius users. Once you’ve got your tf-idf weights sorted, you can represent them in a vector space model as vectors.
+
+##Latent factor algorithms - Latent factors are what shakes out when you do a particular kind of statistical analysis, called a factor analysis, on a set of data, looking for the hidden, unseen variables that cause the variation in all the different variables you’re examining. Discovering the hidden or “latent” factors in your data set is a handy way to reduce the size of the problem that you have to compute, and it works because humans are predictable.
+
+##Specific Recommendations
+##I am thinking of a scenario where a single Spotify account may be used by multiple users. Possibly due to the parents having their credit card linked to the account. Thereby having a wide mixture of different music, possibly even different by age. How would the Daily Mix"" feature be able to accurately predict and recommend songs and albums to these multiple users. If there was some way to distinguish between multiple users of the same account. For example a parent account with child accounts.Also a way to identity what albums and songs are associated with these parent and child accounts.This would help to make the genius recommendations more accurate.
+```
+
