@@ -1,0 +1,285 @@
+---
+title: "Data607_Final Project Rajan"
+always_allow_html: yes
+author: "Krishna Rajan"
+date: "5/9/2018"
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+    latex_engine: xelatex
+---
+Project Outline: 
+I work for Delphi Technologies which a leading automotive supplier of powertrain components(www.delphi.com), twitter handle (@delphitech) for this project I was tasked by my director of marketing to perform an analysis of Delphi technology on twitter. The direction given was, what was the most tweeted words about Delphi? What was the sentiments from twitter followers for our company?Also questions regarding top tweeted tweets, & followers summary?
+
+Techniques used for this project:
+1)Text Mining (extract, mine, clean & stem)
+
+2)Topic Modelling (Frequent words, word cloud)
+
+3)Analysis(Word association,Network of terms,sentiment analysis,followers & top tweets analysis)
+
+4)Maping Twitter followers.
+
+
+I started the project by building a map using geocode location of delphitech twitter followers.
+
+Geo-Mapping Twitter Users
+
+First step is to authenticate twitter data with twitter API
+```{r}
+##GEO-MAP Twitter FOLLOWERS 
+require(twitteR)
+library(ROAuth)
+require(data.table)
+require(RJSONIO)
+require(leaflet)
+
+setup_twitter_oauth("jmbwTtQL7ZoW4rxCMOmUOOmXJ", "3X5v1OUEs67lw25vg6rK7muS6VmKFTAQGMpkVOVF2JQgHzZikI", "51183723-uKDVYied6jRISD0aJLstyJkZLW8Ykqttqos8mbMJI", "tkmsZd790aSy6rXgDlbwfUWLtHC6Wjxm68pQE1uumO21I")
+
+Delphi <- getUser("delphitech")
+```
+Les me pose an interesting question, where is delphitech’s followers located? To answer the question, we will first create a R function called get_followers. The function can download follower information from API, remove users whose location information is blank or contains special characters. Notice that Twitter API has rate limit, 
+
+```{r}
+##organise the data
+Delphi_follower_IDs <-Delphi$getFollowers(n=200)
+
+##doubel check to see if most fo the followers have been extracted
+length(Delphi_follower_IDs) 
+
+##turn followers into a data frame
+Delphi_followers_df <- do.call("rbind", lapply(Delphi_follower_IDs,as.data.frame))
+##Take a quick peep at the data.
+head(Delphi_followers_df$location, 10)
+
+## Remove followers who have not listed their followers.
+Delphi_followers_df<-subset(Delphi_followers_df, location!="")
+
+##remove any instances of % since that character doesn’t play well with the API.
+Delphi_followers_df$location<-gsub("%", " ",Delphi_followers_df$location)
+```
+The location information is stored in the column named location. We can match the cities and states with exact coordinates through Google Map API. To do that, obtain a key from Google Maps Geocoding API. (https://developers.google.com/maps/documentation/geocoding/get-api-key). There is a limit of 2,500 coordinates per day if you are a standard Google Map API user.
+
+```{r}
+#Install key package helpers:
+source("https://raw.githubusercontent.com/LucasPuente/geocoding/master/geocode_helpers.R")
+#Install modified version of the geocode function
+#(that now includes the api_key parameter):
+source("https://raw.githubusercontent.com/LucasPuente/geocoding/master/modified_geocode.R")
+geocode_apply<-function(x){
+    geocode(x, source = "google", output = "all", api_key="AIzaSyDjTT7ysuxenX8UauY3VUgqhjOxUBmsIKc")
+}
+```
+Apply the function geocode_apply to get cordinates
+
+```{r}
+geocode_results<-sapply(Delphi_followers_df$location, geocode_apply, simplify = F)
+length(geocode_results)
+```
+Clean the cordinate data with the following code,
+
+```{r}
+condition_a <- sapply(geocode_results, function(x) x["status"]=="OK")
+geocode_results<-geocode_results[condition_a]
+condition_b <- lapply(geocode_results, lapply, length)
+condition_b2<-sapply(condition_b, function(x) x["results"]=="1")
+geocode_results<-geocode_results[condition_b2]
+source("https://raw.githubusercontent.com/LucasPuente/geocoding/master/cleaning_geocoded_results.R")
+results_b<-lapply(geocode_results, as.data.frame)
+results_c<-lapply(results_b,function(x) subset(x, select=c("results.formatted_address",
+                                                        "results.geometry.location")))
+results_d<-lapply(results_c,function(x) data.frame(Location=x[1,"results.formatted_address"],
+                                                  lat=x[1,"results.geometry.location"],
+                                                lng=x[2,"results.geometry.location"]))
+results_e<-rbindlist(results_d)
+```
+Now, with this dataframe of Twitter followers with the coordinates matching their self-reported location on Twitter bio. its time to plot their location on a map.
+```{r}
+library(maps)
+library(mapproj)
+
+map1 <- leaflet(data = results_e) %>% 
+  addTiles() %>%
+  setView(lng = -98.35, lat = 39.50, zoom = 4) %>% 
+  addMarkers(lng = ~lng, lat = ~lat, popup = ~ as.character(Location)) %>% 
+  addProviderTiles("CartoDB.Positron") %>%
+  addCircleMarkers(
+    stroke = FALSE, fillOpacity = 0.5
+  ) 
+map1
+
+usericon <- makeIcon(
+  iconUrl = results_e$profile_image,
+  iconWidth = 15, iconHeight = 15
+)
+map2 <- leaflet(data = results_e) %>% 
+  addTiles() %>%
+  setView(lng = -98.35, lat = 39.50, zoom = 4) %>% 
+  addMarkers(lng = ~lng, lat = ~lat, popup = ~ as.character(Location),icon = usericon,data = results_e) %>% 
+  addProviderTiles(providers$Esri.NatGeoWorldMap) 
+map2
+```
+
+1)Text Mining (extract, mine, clean & stem)
+The first step was to setup an API on twitter to extract the tweets directly in R.Using "twitteR""
+package the api is authenticated for us to start loading tweets into R.
+
+After authenticating it was time to bring in the tweets related to "Delphi Technologies"using "#delphitech""
+
+Process
+1. Extract tweets and followers from the Twitter website with R and the twitteR package
+
+2. With the tm package, clean text by removing punctuations, numbers, hyperlinks and stop words, followed by stemming and stem completion
+
+3. Build a term-document matrix
+```{r}
+##RETRIEVE TWEETS
+
+library(twitteR)
+library(ROAuth)
+
+setup_twitter_oauth("jmbwTtQL7ZoW4rxCMOmUOOmXJ", "3X5v1OUEs67lw25vg6rK7muS6VmKFTAQGMpkVOVF2JQgHzZikI", "51183723-uKDVYied6jRISD0aJLstyJkZLW8Ykqttqos8mbMJI", "tkmsZd790aSy6rXgDlbwfUWLtHC6Wjxm68pQE1uumO21I")
+```
+Text Cleaning: To clean the tweets data "tm" package was used.The main structure for managing documents in tm is a so-called Corpus, representing a collection of text documents. Therefore below code served us as a pre-cleaning in order to prepare clean text mining data. Each of the tweets will be considered a separate document.
+Useful source: https://cran.r-project.org/web/packages/tm/vignettes/tm.pdf
+```{r}
+## TEXT CLEANING
+library(tm)
+
+DelTech <- userTimeline("delphitech", n = 3200)
+head(DelTech)
+DelTech_df <- twListToDF(DelTech)
+head(DelTech_df)
+DelTech_df[190, c("id", "created", "screenName", "replyToSN",
+  "favoriteCount", "retweetCount", "longitude", "latitude", "text")]
+myCorpus <- Corpus(VectorSource(DelTech_df$text))
+# convert to lower case
+myCorpus <- tm_map(myCorpus, content_transformer(tolower))
+# remove URLs
+removeURL <- function(x) gsub("http[^[:space:]]*", "", x)
+myCorpus <- tm_map(myCorpus, content_transformer(removeURL))
+# remove anything other than English letters or space removeNumPunct <- function(x) gsub("[^[:alpha:][:space:]]*", "", x) myCorpus <- tm_map(myCorpus, content_transformer(removeNumPunct))
+# remove stopwords
+myStopwords <- c(setdiff(stopwords('english'), c("r", "big")),
+                     "use", "see", "used", "via", "amp")
+    myCorpus <- tm_map(myCorpus, removeWords, myStopwords)
+    # remove extra whitespace
+    myCorpus <- tm_map(myCorpus, stripWhitespace)
+    # keep a copy for stem completion later
+    myCorpusCopy <- myCorpus
+```
+Term Document Matrix
+A common approach in text mining is to create a term-document matrix from a corpus. In the tm package the classes TermDocumentMatrix and DocumentTermMatrix (depending on whether you want terms as rows and documents as columns, or vice versa) employ sparse matrices for corpora. Inspecting a term-document matrix displays a sample, whereas as.matrix() yields the full matrix in dense format.
+```{r}
+##BUILD TERM DOCUMENT MATRIX
+(tdm <- TermDocumentMatrix(myCorpus, control = list(wordLengths = c(1, Inf))))
+tdm
+idx <- which(dimnames(tdm)$Terms %in% c("clean", "after market", "fuel"))
+as.matrix(tdm[idx, 21:30])
+```
+
+The top frequent terms used for delphitech tweets
+```{r}
+## TOP FREQUENT TERMS.
+(freq.terms <- findFreqTerms(tdm, lowfreq =20))
+
+term.freq <- rowSums(as.matrix(tdm))
+term.freq <- subset(term.freq, term.freq >= 20)
+df <- data.frame (term = names(term.freq), freq = term.freq) 
+
+library(ggplot2)
+ggplot(df, aes(x=term, y=freq)) + geom_bar(stat="identity") +
+  xlab("Terms") + ylab("Count") + coord_flip() +
+  theme(axis.text=element_text(size=7))
+
+##below you can see how the occurances behave, Delphi & fuel show up in a lot of tweets and it makes sense as Fuel products is one of the biggest drivers for our company.
+```
+Wordcloud
+I used wordcloud to present the words in Delphi Technology tweets in which size of each word indicates its frequency or importance.
+
+First step is to create matrix of a TermDocumentMatrix;
+Second Step is to calculate frequency of a given word and sort it descending;
+The last step is to create wordcloud with the most frequent word in the center.
+```{r}
+##WORDCLOUD
+library(wordcloud)
+mat <- as.matrix(tdm)
+# Frequency#
+word.freq <- sort(rowSums(mat), decreasing = T)
+# Colors#
+pal <- brewer.pal(9, "BuGn")[-(1:4)]
+# Generate wordcloud#
+wordcloud(word = names(word.freq), freq = word.freq, min.freq = 3, random.order = F, 
+    colors = pal, scale = c(2, 0.5))
+
+```
+
+
+Analyses Associations
+For any given word, findAssocs() calculates its correlation with every other word in a TDM or DTM. Scores range from 0 to 1. A score of 1 means that two words always appear together, while a score of 0 means that they never appear together.
+```{r}
+##Find Associations.
+findAssocs(tdm, "fuel", 0.2)
+findAssocs(tdm, "delphi", 0.2)
+```
+
+Network of terms
+We often want to know connection between words just like between humans. With network analysis, not only can we determine which terms appear together frequently, we can visualize how keywords and tweets are connected as a network of terms. This way, we can resolve the number of connections keywords have with one another, and how many connections a specific keyword has with other keywords. We have chosen to show the network of the 15 most frequent terms.
+```{r}
+##NETWORK OF TERMS.
+library(graph)
+library(Rgraphviz)
+plot(tdm, term = freq.terms, corThreshold = 0.1, weighting = T)
+```
+
+As you can see the beiggest associations are with fuel & pump along with injector and performance.
+
+Sentiment Analysis
+The term sentiment is for a way to judge how our brand and company is perceived by people following us.It helps us to understand the positive,negative & neutral preference to our brand and can be a key tool for markting to convert the negative and neutral followers to positive followers which  increases brand awerness.
+```{r}
+## SENTIMENT ANALYSIS
+library(sentiment)
+sentiments <- sentiment(DelTech_df$text)
+table(sentiments$polarity)
+sentiments$score <- 0
+sentiments$score[sentiments$polarity == "positive"] <- 1
+sentiments$score[sentiments$polarity == "negative"] <- -1
+sentiments$date <- as.Date(DelTech_df$created)
+result <- aggregate(score ~ date, data = sentiments, sum)
+plot(result, type = "l")
+```
+
+Looking at the sentiment analysis certain actions are required to convert the negative & neutral followers to positive followers.
+
+Followers analysis:
+Retrieve User Info
+Used the twitteR package to retrieve user info. The appopriate code is shown above. only friends and followers were retrieved and There is an option to retireve followers of our followers, but this is very time consuming.
+```{r}
+##FOLLOWER ANALYSIS 
+user <- getUser("Delphitech")
+user$toDataFrame()
+friends <- user$getFriends() # who this user follows
+followers <- user$getFollowers() # this user's followers
+```
+
+
+Top Retweeted Tweets
+Plotted the top retweeted tweets, the limit at 5, to understand what the the most retweeted tweet.
+```{r}
+## RETWEETS
+table(DelTech_df$retweetCount)
+selected <- which(DelTech_df$retweetCount >= 5)
+# plot them
+dates <- strptime(DelTech_df$created, format="%Y-%m-%d")
+plot(x=dates, y=DelTech_df$retweetCount, type="l", col="grey",
+     xlab="Date", ylab="Times retweeted")
+colors <- rainbow(10)[1:length(selected)]
+points(dates[selected], DelTech_df$retweetCount[selected],
+       pch=19, col=colors)
+text(dates[selected], DelTech_df$retweetCount[selected],
+     DelTech_df$text[selected], col=colors, cex=.9)
+```
+
+Conclusion:
+Based on the project above I can say I learnt a lot and used the material thought in class to answer a business question. Social media is now part our daily lives and the data from it is valuable and can highlight strenghts and weakness of a person/brand and with tools and projects like these certain value added insights can be gleamed which can help teams to convert the weakenss into strenghts while keeping the strenghts intact.
